@@ -1,0 +1,49 @@
+{
+  "name": "bing-wallpaper-uploader",
+  "version": "1.0.0",
+  "description": "Modular Cloudflare Worker for automatic Bing wallpaper upload to Cloudflare ImgBed",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:production": "wrangler deploy --env production",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "secret:upload": "wrangler secret put IMG_BED_URL",
+    "secret:auth": "wrangler secret put IMG_BED_AUTH_CODE",
+    "secret:channel": "wrangler secret put IMG_BED_CHANNEL",
+    "secret:token": "wrangler secret put TRIGGER_TOKEN",
+    "secret:all": "npm run secret:upload && npm run secret:auth && npm run secret:token"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "bing",
+    "wallpaper",
+    "imgbed",
+    "auto-upload",
+    "cron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^4.40.0",
+    "@typescript-eslint/eslint-plugin": "^6.18.0",
+    "@typescript-eslint/parser": "^6.18.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
