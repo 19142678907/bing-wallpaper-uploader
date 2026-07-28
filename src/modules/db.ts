@@ -1,6 +1,8 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { Logger } from './utils';
 
+const initializationPromises = new WeakMap<D1Database, Promise<void>>();
+
 /**
  * D1 Database operations for idempotency tracking
  * Stores uploaded wallpaper dates to prevent duplicate uploads
@@ -16,18 +18,31 @@ export class WallpaperDB {
 
   /**
    * Initialize the database table
-   * Should be called once during setup/migration
+   * Runs at most once per D1 binding in a warm Worker instance.
    */
   async initialize(): Promise<void> {
-    await this.db.exec(`
+    const existingInitialization = initializationPromises.get(this.db);
+    if (existingInitialization) {
+      return existingInitialization;
+    }
+
+    const initialization = this.db.exec(`
       CREATE TABLE IF NOT EXISTS uploaded_wallpapers (
         date TEXT PRIMARY KEY,
         url TEXT NOT NULL,
         uploaded_at INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_uploaded_at ON uploaded_wallpapers(uploaded_at);
-    `);
-    this.logger.info('D1 database initialized');
+    `).then(() => {
+      this.logger.info('D1 database initialized');
+    }).catch(error => {
+      // Permit a later request to retry after a transient D1 failure.
+      initializationPromises.delete(this.db);
+      throw error;
+    });
+
+    initializationPromises.set(this.db, initialization);
+    return initialization;
   }
 
   /**

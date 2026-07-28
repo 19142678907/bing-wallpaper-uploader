@@ -41,7 +41,7 @@ cpu_ms = 1500
 # Setup:
 #   1. wrangler d1 create bing-wallpaper-db
 #   2. Copy the generated database_id below (replace "your-database-id")
-#   3. The Worker calls db.initialize() on each cron run to auto-create the table.
+#   3. The Worker initializes the schema once per warm Worker instance.
 #      To pre-create manually:
 #      wrangler d1 execute bing-wallpaper-db --command \
 #        "CREATE TABLE IF NOT EXISTS uploaded_wallpapers (date TEXT PRIMARY KEY, url TEXT NOT NULL, uploaded_at INTEGER NOT NULL);"

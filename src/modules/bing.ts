@@ -137,7 +137,13 @@ export class BingClient {
    * Internal method to fetch from Bing API
    */
   private async fetchFromAPI(config: BingImageConfig): Promise<BingImage | BingImage[]> {
-    const url = `${this.BING_API_BASE}?format=js&idx=${config.idx}&n=${config.n}&mkt=${config.mkt}`;
+    const params = new URLSearchParams({
+      format: 'js',
+      idx: String(config.idx),
+      n: String(config.n),
+      mkt: config.mkt
+    });
+    const url = `${this.BING_API_BASE}?${params}`;
 
     this.logger.debug('Fetching from Bing API', { url });
 

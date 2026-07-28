@@ -248,11 +248,11 @@ async function handleMultiUploadRequest(request: Request, env: Env): Promise<Res
     const url = new URL(request.url);
     const queryDays = url.searchParams.get('days');
     if (queryDays) {
-      days = parseInt(queryDays);
+      days = Number(queryDays);
     }
   }
 
-  if (isNaN(days) || days < 1 || days > 8) {
+  if (!Number.isInteger(days) || days < 1 || days > 8) {
     return new Response(
       JSON.stringify({
         error: 'Invalid days parameter. Must be between 1 and 8.'
@@ -322,11 +322,11 @@ async function handleSpecificDateRequest(request: Request, env: Env): Promise<Re
     const url = new URL(request.url);
     const queryDaysAgo = url.searchParams.get('daysAgo');
     if (queryDaysAgo) {
-      daysAgo = parseInt(queryDaysAgo);
+      daysAgo = Number(queryDaysAgo);
     }
   }
 
-  if (isNaN(daysAgo) || daysAgo < 0 || daysAgo > 7) {
+  if (!Number.isInteger(daysAgo) || daysAgo < 0 || daysAgo > 7) {
     return new Response(
       JSON.stringify({
         error: 'Invalid daysAgo parameter. Must be between 0 and 7.'

@@ -42,10 +42,11 @@ export class Scheduler {
     try {
       await this.db.initialize();
     } catch (error) {
-      // D1 is optional; do not prevent uploads when its schema is unavailable.
+      // D1 is optional; avoid additional failed D1 calls during this upload.
       this.logger.warn('Failed to initialize D1 database; continuing without idempotency', {
         error: error instanceof Error ? error.message : String(error)
       });
+      this.db = undefined;
     }
   }
 
