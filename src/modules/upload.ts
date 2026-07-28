@@ -42,7 +42,7 @@ export class ImgBedClient {
     try {
       // Build URL with query parameters
       const url = this.buildUploadUrl(config);
-      this.logger.debug('Upload URL', { url });
+      this.logger.debug('Building upload URL');
 
       // Create FormData
       const formData = new FormData();

@@ -45,10 +45,11 @@ cpu_ms = 1500
 #      To pre-create manually:
 #      wrangler d1 execute bing-wallpaper-db --command \
 #        "CREATE TABLE IF NOT EXISTS uploaded_wallpapers (date TEXT PRIMARY KEY, url TEXT NOT NULL, uploaded_at INTEGER NOT NULL);"
-[[d1_databases]]
-binding = "DB"
-database_name = "bing-wallpaper-db"
-database_id = "your-database-id"
+# Optional D1 binding for upload idempotency. Uncomment after creating a database.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "bing-wallpaper-db"
+# database_id = "<your-database-id>"
 
 # R2 Bindings (optional)
 # [[r2_buckets]]

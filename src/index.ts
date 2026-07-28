@@ -1,7 +1,5 @@
 import type { Env } from './types';
 import { Scheduler } from './modules/scheduler';
-import { WallpaperDB } from './modules/db';
-import { Logger } from './modules/utils';
 
 /**
  * Cloudflare Worker Entry Point
@@ -160,21 +158,10 @@ function verifyToken(request: Request, env: Env): Response | null {
  */
 async function handleScheduledEvent(event: ScheduledEvent, env: Env): Promise<void> {
   const scheduler = new Scheduler(env);
-  const logger = new Logger(env.LOG_LEVEL || 'info');
 
   console.log(`[Scheduled] Cron triggered at ${new Date().toISOString()}`);
 
-  // Initialize D1 table if DB is configured
-  if (env.DB) {
-    try {
-      const db = new WallpaperDB(env.DB, logger);
-      await db.initialize();
-    } catch (error) {
-      console.error('[Scheduled] Failed to initialize D1:', error);
-      // Continue anyway — DB is optional
-    }
-  }
-
+  await scheduler.initDb();
   const result = await scheduler.runDailyUpload();
 
   if (result.skipped) {
@@ -206,6 +193,7 @@ async function handleUploadRequest(request: Request, env: Env): Promise<Response
   if (authError) return authError;
 
   const scheduler = new Scheduler(env);
+  await scheduler.initDb();
   const result = await scheduler.runDailyUpload();
 
   const statusCode = result.success ? 200 : 500;
@@ -280,6 +268,7 @@ async function handleMultiUploadRequest(request: Request, env: Env): Promise<Res
   }
 
   const scheduler = new Scheduler(env);
+  await scheduler.initDb();
   const result = await scheduler.runMultiDayUpload(days);
 
   const statusCode = result.success ? 200 : 500;
@@ -353,6 +342,7 @@ async function handleSpecificDateRequest(request: Request, env: Env): Promise<Re
   }
 
   const scheduler = new Scheduler(env);
+  await scheduler.initDb();
   const result = await scheduler.runSpecificDateUpload(daysAgo);
 
   const statusCode = result.success ? 200 : 500;

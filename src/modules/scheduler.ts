@@ -34,6 +34,22 @@ export class Scheduler {
   }
 
   /**
+   * Initialize D1 database table (safe to call multiple times).
+   */
+  async initDb(): Promise<void> {
+    if (!this.db) return;
+
+    try {
+      await this.db.initialize();
+    } catch (error) {
+      // D1 is optional; do not prevent uploads when its schema is unavailable.
+      this.logger.warn('Failed to initialize D1 database; continuing without idempotency', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
+  /**
    * Main workflow: fetch today's Bing wallpaper and upload to ImgBed
    */
   async runDailyUpload(): Promise<{ success: boolean; imageUrl?: string; error?: string; skipped?: boolean }> {

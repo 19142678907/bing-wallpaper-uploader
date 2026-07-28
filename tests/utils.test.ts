@@ -54,8 +54,8 @@ describe('generateFilename', () => {
       title: 'Hello, World! @#$%',
     };
     const filename = generateFilename(image, 'UHD');
-    // Each non-alphanumeric char (comma, space, !, space, @, #, $, %) becomes an underscore
-    expect(filename).toBe('bing_20250627_Hello__World_____UHD.jpg');
+    // Consecutive invalid characters collapse into one separator for readable filenames.
+    expect(filename).toBe('bing_20250627_Hello_World_UHD.jpg');
   });
 
   it('falls back to "wallpaper" when title is empty', () => {

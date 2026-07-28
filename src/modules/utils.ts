@@ -166,6 +166,6 @@ export function parseBingDate(dateStr: string): Date {
  */
 export function generateFilename(image: Pick<BingImage, 'startdate' | 'title'>, resolution: string): string {
   const date = image.startdate || formatDate(new Date());
-  const title = image.title?.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50) || 'wallpaper';
+  const title = image.title?.trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').substring(0, 50) || 'wallpaper';
   return `bing_${date}_${title}_${resolution}.jpg`;
 }

@@ -89,7 +89,7 @@ crons = ["0 8 * * *"]
 
 未知路径返回 404，并附带可用 endpoint 列表。
 
-注意：当前 HTTP 手动触发接口没有额外鉴权。部署到公网后，任何能访问 Worker URL 的人都可以触发上传。生产环境如果需要限制触发权限，建议增加 token 校验，或在 Cloudflare 层配置访问控制。
+注意：当前 HTTP 手动触发接口（`/upload`、`/upload/multi`、`/upload/date`）均需要 `TRIGGER_TOKEN` 鉴权。请求头需携带 `Authorization: Bearer <token>`。健康检查接口（`/`、`/health`）无需鉴权。
 
 ## 5. 核心数据流
 
@@ -452,9 +452,9 @@ npm run deploy:production
 
 ## 12. 扩展建议
 
-### 12.1 增加手动触发鉴权
+### 12.1 手动触发鉴权（已实现）
 
-当前 `/upload`、`/upload/multi`、`/upload/date` 没有鉴权。可以新增 `TRIGGER_TOKEN`：
+`/upload`、`/upload/multi`、`/upload/date` 已支持 `TRIGGER_TOKEN` 鉴权。可以新增 `TRIGGER_TOKEN`：
 
 1. 在 `Env` 中增加 `TRIGGER_TOKEN?: string`。
 2. 在 `fetch()` 中读取 `Authorization` 或查询参数。
