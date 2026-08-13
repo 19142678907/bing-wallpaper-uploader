@@ -67,14 +67,27 @@ describe('generateFilename', () => {
     expect(filename).toBe('bing_20250627_wallpaper_1920x1080.jpg');
   });
 
-  it('truncates long titles to 50 characters', () => {
+  it('truncates long titles to 50 characters at word boundary', () => {
     const longTitle = 'A'.repeat(100);
     const image: Pick<BingImage, 'startdate' | 'title'> = {
       startdate: '20250627',
       title: longTitle,
     };
     const filename = generateFilename(image, '1920x1080');
-    // Title part should be exactly 50 A's
+    // All 'A's with no underscores — keeps full 50 chars.
     expect(filename).toBe(`bing_20250627_${'A'.repeat(50)}_1920x1080.jpg`);
+  });
+
+  it('truncates at word boundary when underscores exist', () => {
+    const longTitle = 'Hello_World_From_Bing_Wallpaper_Service_2025_AdditionalText';
+    const image: Pick<BingImage, 'startdate' | 'title'> = {
+      startdate: '20250627',
+      title: longTitle,
+    };
+    const filename = generateFilename(image, '1920x1080');
+    // Should truncate at or before 50 chars, ending at a word boundary (underscore)
+    expect(filename).toMatch(/^bing_20250627_.+_1920x1080\.jpg$/);
+    const titlePart = filename.replace(/bing_20250627_/, '').replace(/_1920x1080\.jpg$/, '');
+    expect(titlePart.length).toBeLessThanOrEqual(50);
   });
 });

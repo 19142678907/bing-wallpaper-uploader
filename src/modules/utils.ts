@@ -1,4 +1,4 @@
-import { LogLevel, type LogEntry, type BingImage } from '../types';
+import { LogLevel, type BingImage } from '../types';
 
 /**
  * Simple logger for Cloudflare Workers
@@ -16,44 +16,31 @@ export class Logger {
     this.level = this.levelMap[levelStr.toLowerCase()] || LogLevel.INFO;
   }
 
-  private format(level: LogLevel, message: string, context?: Record<string, unknown>): LogEntry {
-    return {
-      level,
-      message,
-      timestamp: new Date().toISOString(),
-      context
-    };
-  }
-
   private shouldLog(level: LogLevel): boolean {
     return level >= this.level;
   }
 
   debug(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      const entry = this.format(LogLevel.DEBUG, message, context);
-      console.log(`[DEBUG] ${entry.timestamp} - ${message}`, context ? JSON.stringify(context) : '');
+      console.log(`[DEBUG] ${new Date().toISOString()} - ${message}`, context ? JSON.stringify(context) : '');
     }
   }
 
   info(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      const entry = this.format(LogLevel.INFO, message, context);
-      console.log(`[INFO] ${entry.timestamp} - ${message}`, context ? JSON.stringify(context) : '');
+      console.log(`[INFO] ${new Date().toISOString()} - ${message}`, context ? JSON.stringify(context) : '');
     }
   }
 
   warn(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      const entry = this.format(LogLevel.WARN, message, context);
-      console.warn(`[WARN] ${entry.timestamp} - ${message}`, context ? JSON.stringify(context) : '');
+      console.warn(`[WARN] ${new Date().toISOString()} - ${message}`, context ? JSON.stringify(context) : '');
     }
   }
 
   error(message: string, context?: Record<string, unknown>): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      const entry = this.format(LogLevel.ERROR, message, context);
-      console.error(`[ERROR] ${entry.timestamp} - ${message}`, context ? JSON.stringify(context) : '');
+      console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, context ? JSON.stringify(context) : '');
     }
   }
 }
@@ -110,9 +97,9 @@ export function sleep(ms: number): Promise<void> {
  */
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  options: { maxRetries?: number; initialDelay?: number; onRetry?: (error: unknown, attempt: number) => void } = {}
+  options: { maxRetries?: number; initialDelay?: number; maxDelay?: number; onRetry?: (error: unknown, attempt: number) => void } = {}
 ): Promise<T> {
-  const { maxRetries = 3, initialDelay = 1000, onRetry } = options;
+  const { maxRetries = 3, initialDelay = 1000, maxDelay = 10000, onRetry } = options;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -127,7 +114,7 @@ export async function retryWithBackoff<T>(
       }
 
       if (attempt < maxRetries) {
-        const delay = initialDelay * Math.pow(2, attempt);
+        const delay = Math.min(initialDelay * Math.pow(2, attempt), maxDelay);
         if (onRetry) onRetry(error, attempt + 1);
         await sleep(delay);
       }
@@ -166,6 +153,15 @@ export function parseBingDate(dateStr: string): Date {
  */
 export function generateFilename(image: Pick<BingImage, 'startdate' | 'title'>, resolution: string): string {
   const date = image.startdate || formatDate(new Date());
-  const title = image.title?.trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').substring(0, 50) || 'wallpaper';
+  let title = image.title?.trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'wallpaper';
+  // Truncate to 50 chars, then back up to the last underscore to avoid mid-word cuts.
+  if (title.length > 50) {
+    title = title.substring(0, 50);
+    const lastUnderscore = title.lastIndexOf('_');
+    if (lastUnderscore > 0) {
+      title = title.substring(0, lastUnderscore);
+    }
+    // If no underscore found, keep the full 50 chars (e.g. long single word).
+  }
   return `bing_${date}_${title}_${resolution}.jpg`;
 }

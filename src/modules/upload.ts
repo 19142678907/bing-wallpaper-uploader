@@ -1,6 +1,18 @@
 import type { ImgBedUploadConfig, ImgBedUploadResponse } from '../types';
 import { Logger, UploadError, retryWithBackoff, sleep } from './utils';
 
+/**
+ * Detect the MIME type of an image from its binary signature (magic bytes).
+ */
+function detectImageMimeType(data: ArrayBuffer): string {
+  const bytes = new Uint8Array(data).slice(0, 4);
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) return 'image/jpeg';
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return 'image/png';
+  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return 'image/gif';
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) return 'image/webp';
+  return 'application/octet-stream';
+}
+
 type UploadMultipleResult =
   | { filename: string; imageUrl: string; success: true }
   | { filename: string; error: string; success: false };
@@ -12,6 +24,7 @@ type UploadMultipleResult =
 export class ImgBedClient {
   private baseUrl: string;
   private logger: Logger;
+  private readonly FETCH_TIMEOUT_MS = 30_000;
 
   constructor(baseUrl: string, logger: Logger) {
     const normalizedUrl = baseUrl.replace(/\/+$/, '');
@@ -46,7 +59,8 @@ export class ImgBedClient {
 
       // Create FormData
       const formData = new FormData();
-      const blob = new Blob([imageData], { type: 'image/jpeg' });
+      const contentType = detectImageMimeType(imageData);
+      const blob = new Blob([imageData], { type: contentType });
       formData.append('file', blob, filename);
 
       // Upload with retry logic
@@ -113,7 +127,8 @@ export class ImgBedClient {
   private async performUpload(url: string, formData: FormData): Promise<ImgBedUploadResponse[]> {
     const response = await fetch(url, {
       method: 'POST',
-      body: formData
+      body: formData,
+      signal: AbortSignal.timeout(this.FETCH_TIMEOUT_MS)
     });
 
     if (!response.ok) {

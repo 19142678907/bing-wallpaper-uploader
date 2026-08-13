@@ -9,6 +9,8 @@ export class BingClient {
   private logger: Logger;
   private readonly BING_API_BASE = 'https://www.bing.com/HPImageArchive.aspx';
 
+  private readonly FETCH_TIMEOUT_MS = 10_000;
+
   constructor(logger: Logger) {
     this.logger = logger;
   }
@@ -50,7 +52,8 @@ export class BingClient {
         const response = await fetch(imageUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
+          },
+          signal: AbortSignal.timeout(this.FETCH_TIMEOUT_MS)
         });
 
         if (!response.ok) {
@@ -150,7 +153,8 @@ export class BingClient {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
+      },
+      signal: AbortSignal.timeout(this.FETCH_TIMEOUT_MS)
     });
 
     if (!response.ok) {

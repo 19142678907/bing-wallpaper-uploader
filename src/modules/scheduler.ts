@@ -196,9 +196,16 @@ export class Scheduler {
         }
       }
 
-      // Add download errors to results
-      for (const err of downloadErrors) {
-        results.push({ date: err.date, error: err.error });
+      // Merge download errors in chronological order
+      const sortedDownloadErrors = downloadErrors.sort((a, b) => a.date.localeCompare(b.date));
+      for (const err of sortedDownloadErrors) {
+        // Insert into results at the correct position to maintain date order
+        const insertIndex = results.findIndex(r => r.date > err.date);
+        if (insertIndex === -1) {
+          results.push({ date: err.date, error: err.error });
+        } else {
+          results.splice(insertIndex, 0, { date: err.date, error: err.error });
+        }
       }
 
       const failedCount = results.filter(result => result.error).length;

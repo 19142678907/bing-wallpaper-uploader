@@ -110,7 +110,7 @@ function verifyToken(request: Request, env: Env): Response | null {
     return new Response(
       JSON.stringify({
         error: 'Authentication required',
-        message: 'TRIGGER_TOKEN is not configured on the server. Set it via `wrangler secret put TRIGGER_TOKEN`.'
+        message: 'Server configuration is incomplete. Please contact the administrator.'
       }),
       {
         status: 401,
@@ -125,7 +125,7 @@ function verifyToken(request: Request, env: Env): Response | null {
     return new Response(
       JSON.stringify({
         error: 'Authentication required',
-        message: 'Provide the TRIGGER_TOKEN in the Authorization header: `Bearer <token>`'
+        message: 'A valid Authorization header is required.'
       }),
       {
         status: 401,
@@ -161,15 +161,19 @@ async function handleScheduledEvent(event: ScheduledEvent, env: Env): Promise<vo
 
   console.log(`[Scheduled] Cron triggered at ${new Date().toISOString()}`);
 
-  await scheduler.initDb();
-  const result = await scheduler.runDailyUpload();
+  try {
+    await scheduler.initDb();
+    const result = await scheduler.runDailyUpload();
 
-  if (result.skipped) {
-    console.log(`[Scheduled] Already uploaded today, skipped.`);
-  } else if (result.success) {
-    console.log(`[Scheduled] Upload successful: ${result.imageUrl}`);
-  } else {
-    console.error(`[Scheduled] Upload failed: ${result.error}`);
+    if (result.skipped) {
+      console.log(`[Scheduled] Already uploaded today, skipped.`);
+    } else if (result.success) {
+      console.log(`[Scheduled] Upload successful: ${result.imageUrl}`);
+    } else {
+      console.error(`[Scheduled] Upload failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error(`[Scheduled] Unexpected error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -367,14 +371,14 @@ async function handleSpecificDateRequest(request: Request, env: Env): Promise<Re
 }
 
 /**
- * CORS preflight handler
+ * CORS preflight handler — only allows OPTIONS on non-auth endpoints.
  */
 function handleOptionsRequest(): Response {
   return new Response(null, {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400'
     }

@@ -114,17 +114,6 @@ export class Config {
     };
   }
 
-  /**
-   * Create a new ImgBed configuration with custom parameters
-   * Useful for different upload scenarios
-   */
-  createImgBedConfig(overrides: Partial<ImgBedUploadConfig>): ImgBedUploadConfig {
-    return {
-      ...this.imgBedConfig,
-      ...overrides
-    };
-  }
-
   private getBingResolution(): BingResolution {
     const resolution = this.env.BING_RESOLUTION || '1920x1080';
 
