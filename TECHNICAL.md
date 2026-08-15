@@ -83,8 +83,8 @@ crons = ["0 8 * * *"]
 | `/` | GET | 健康检查 |
 | `/health` | GET | 健康检查 |
 | `/upload` | POST | 上传今天的壁纸 |
-| `/upload/multi?days=7` | GET | 上传最近 N 天壁纸，范围 1 到 8 |
-| `/upload/date?daysAgo=1` | GET | 上传 N 天前壁纸，范围 0 到 7 |
+| `/upload/multi?days=7` | POST | 上传最近 N 天壁纸，范围 1 到 8 |
+| `/upload/date?daysAgo=1` | POST | 上传 N 天前壁纸，范围 0 到 7 |
 | 任意路径 | OPTIONS | CORS 预检 |
 
 未知路径返回 404，并附带可用 endpoint 列表。
